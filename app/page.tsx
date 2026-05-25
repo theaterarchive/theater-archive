@@ -32,7 +32,7 @@ export default function Home() {
   };
 
   // 📂 CSV 업로드
-  const handleFileUpload = (e) => {
+  const handleFileUpload = (e: any) => {
     const file = e.target.files[0];
     if (!file) return;
 
