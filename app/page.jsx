@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Papa from "papaparse";
+import Link from "next/link";
+import BottomNav from "./components/BottomNav";
 
 export default function Home() {
   const [records, setRecords] = useState([]);
@@ -23,7 +25,9 @@ export default function Home() {
   // 💾 로컬 저장 불러오기
   useEffect(() => {
     const saved = localStorage.getItem("records");
-    if (saved) setRecords(JSON.parse(saved));
+    if (saved) {
+      setRecords(JSON.parse(saved));
+    }
   }, []);
 
   const saveToLocal = (data) => {
@@ -38,6 +42,7 @@ export default function Home() {
 
     Papa.parse(file, {
       skipEmptyLines: true,
+
       complete: (results) => {
         const parsed = results.data.slice(1).map((cols) => ({
           id: cols[0],
@@ -46,6 +51,7 @@ export default function Home() {
           time: cols[3],
           theater: cols[4],
           seat: cols[5],
+
           cast: cols[6]
             ? String(cols[6])
                 .replace(/"/g, "")
@@ -60,7 +66,7 @@ export default function Home() {
     });
   };
 
-  // 🎭 배우 필터 (AND / OR 핵심 로직)
+  // 🎭 배우 필터
   const actorFilteredRecords = useMemo(() => {
     if (selectedActors.length === 0) return records;
 
@@ -70,21 +76,25 @@ export default function Home() {
       }
 
       if (actorMode === "AND") {
-        return selectedActors.every((a) => r.cast.includes(a));
+        return selectedActors.every((a) =>
+          r.cast.includes(a)
+        );
       }
 
       return true;
     });
   }, [records, selectedActors, actorMode]);
 
-  // 🎬 공연 dropdown base (배우 필터 적용)
+  // 🎬 공연 dropdown base
   const titleBase = actorFilteredRecords;
 
   const searchedTitles = useMemo(() => {
     return Array.from(
       new Set(
         titleBase
-          .filter((r) => r.title.includes(titleSearch))
+          .filter((r) =>
+            r.title.includes(titleSearch)
+          )
           .map((r) => r.title)
       )
     ).sort((a, b) => a.localeCompare(b));
@@ -96,15 +106,20 @@ export default function Home() {
     ).sort((a, b) => a.localeCompare(b));
   }, [titleBase]);
 
-  // 🎭 배우 base (공연 기준)
+  // 🎭 배우 base
   const baseByTitle = useMemo(() => {
     if (selectedTitle === "all") return records;
-    return records.filter((r) => r.title === selectedTitle);
+
+    return records.filter(
+      (r) => r.title === selectedTitle
+    );
   }, [records, selectedTitle]);
 
   const allActors = useMemo(() => {
     return Array.from(
-      new Set(baseByTitle.flatMap((r) => r.cast))
+      new Set(
+        baseByTitle.flatMap((r) => r.cast)
+      )
     ).sort((a, b) => a.localeCompare(b));
   }, [baseByTitle]);
 
@@ -117,7 +132,8 @@ export default function Home() {
       });
     });
 
-    const limit = selectedTitle === "all" ? 20 : 5;
+    const limit =
+      selectedTitle === "all" ? 20 : 5;
 
     return Object.entries(count)
       .sort((a, b) => b[1] - a[1])
@@ -132,22 +148,30 @@ export default function Home() {
   // ➕ 배우 선택
   const addActor = (name) => {
     if (!selectedActors.includes(name)) {
-      setSelectedActors([...selectedActors, name]);
+      setSelectedActors([
+        ...selectedActors,
+        name,
+      ]);
     }
+
     setActorSearch("");
     setActorOpen(false);
   };
 
   const removeActor = (name) => {
-    setSelectedActors(selectedActors.filter((a) => a !== name));
+    setSelectedActors(
+      selectedActors.filter((a) => a !== name)
+    );
   };
 
-  // 🎯 최종 필터 결과
+  // 🎯 최종 필터
   const filteredRecords = useMemo(() => {
     let base = actorFilteredRecords;
 
     if (selectedTitle !== "all") {
-      base = base.filter((r) => r.title === selectedTitle);
+      base = base.filter(
+        (r) => r.title === selectedTitle
+      );
     }
 
     return base;
@@ -156,34 +180,68 @@ export default function Home() {
   // 🖱️ 외부 클릭 닫기
   useEffect(() => {
     const handler = (e) => {
-      if (titleRef.current && !titleRef.current.contains(e.target)) {
+      if (
+        titleRef.current &&
+        !titleRef.current.contains(e.target)
+      ) {
         setTitleOpen(false);
       }
-      if (actorRef.current && !actorRef.current.contains(e.target)) {
+
+      if (
+        actorRef.current &&
+        !actorRef.current.contains(e.target)
+      ) {
         setActorOpen(false);
       }
     };
 
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener(
+      "mousedown",
+      handler
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handler
+      );
+    };
   }, []);
 
   return (
-    <main className="min-h-screen bg-black text-white p-6">
+    <main className="min-h-screen bg-[#f5f1ea] text-black p-6 pb-24">
 
-      <h1 className="text-3xl font-bold mb-4">
-        Theater Archive
-      </h1>
+      {/* 헤더 */}
+      <div className="flex items-center justify-between mb-6">
 
-      <input
-        type="file"
-        accept=".csv"
-        onChange={handleFileUpload}
-        className="mb-6"
-      />
+        <h1 className="text-3xl font-bold tracking-tight">
+          Theater Archive
+        </h1>
+
+        <Link
+          href="/settings"
+          className="text-2xl"
+        >
+          ⚙️
+        </Link>
+
+      </div>
+
+      {/* CSV */}
+      <div className="mb-6">
+        <input
+          type="file"
+          accept=".csv"
+          onChange={handleFileUpload}
+          className="text-sm"
+        />
+      </div>
 
       {/* 🎬 공연 */}
-      <div ref={titleRef} className="relative mb-6">
+      <div
+        ref={titleRef}
+        className="relative mb-6"
+      >
 
         <input
           value={titleSearch}
@@ -193,15 +251,15 @@ export default function Home() {
             setTitleSearch(e.target.value);
             setTitleOpen(true);
           }}
-          className="w-full p-2 bg-zinc-900 rounded"
+          className="w-full p-3 rounded-xl bg-white border border-zinc-300 outline-none"
         />
 
         {titleOpen && (
-          <div className="absolute w-full bg-zinc-800 mt-1 rounded max-h-60 overflow-auto z-50">
+          <div className="absolute w-full bg-white border border-zinc-300 mt-1 rounded-xl max-h-60 overflow-auto shadow-lg z-50">
 
-            {/* ✅ 항상 고정 */}
+            {/* 전체 공연 */}
             <div
-              className="p-2 hover:bg-zinc-700 cursor-pointer text-zinc-300"
+              className="p-3 hover:bg-zinc-100 cursor-pointer text-zinc-500"
               onClick={() => {
                 setSelectedTitle("all");
                 setTitleSearch("");
@@ -211,7 +269,7 @@ export default function Home() {
               전체 공연
             </div>
 
-            {/* 🔍 검색 결과 */}
+            {/* 검색 결과 */}
             {searchedTitles.map((t) => (
               <div
                 key={t}
@@ -220,18 +278,18 @@ export default function Home() {
                   setTitleSearch(t);
                   setTitleOpen(false);
                 }}
-                className="p-2 hover:bg-zinc-700 cursor-pointer"
+                className="p-3 hover:bg-zinc-100 cursor-pointer"
               >
                 {t}
               </div>
             ))}
 
-            {/* 🎭 배우 기반 공연 */}
+            {/* 배우 기반 공연 */}
             {selectedActors.length > 0 && (
               <>
-                <div className="border-t border-zinc-700 my-1" />
+                <div className="border-t border-zinc-200" />
 
-                <div className="text-xs text-zinc-400 p-2">
+                <div className="text-xs text-zinc-400 p-3">
                   해당 배우 출연 공연
                 </div>
 
@@ -243,7 +301,7 @@ export default function Home() {
                       setTitleSearch(t);
                       setTitleOpen(false);
                     }}
-                    className="p-2 hover:bg-zinc-700 cursor-pointer"
+                    className="p-3 hover:bg-zinc-100 cursor-pointer"
                   >
                     {t}
                   </div>
@@ -256,31 +314,40 @@ export default function Home() {
       </div>
 
       {/* 🎭 배우 */}
-      <div ref={actorRef} className="mb-6">
+      <div
+        ref={actorRef}
+        className="mb-6"
+      >
 
-        {/* OR / AND */}
-        <div className="flex gap-2 mb-2">
+        {/* AND OR */}
+        <div className="flex gap-2 mb-3">
+
           <button
-            onClick={() => setActorMode("OR")}
-            className={`px-3 py-1 rounded ${
+            onClick={() =>
+              setActorMode("OR")
+            }
+            className={`px-4 py-2 rounded-xl text-sm ${
               actorMode === "OR"
-                ? "bg-white text-black"
-                : "bg-zinc-800"
+                ? "bg-black text-white"
+                : "bg-white border border-zinc-300"
             }`}
           >
             OR
           </button>
 
           <button
-            onClick={() => setActorMode("AND")}
-            className={`px-3 py-1 rounded ${
+            onClick={() =>
+              setActorMode("AND")
+            }
+            className={`px-4 py-2 rounded-xl text-sm ${
               actorMode === "AND"
-                ? "bg-white text-black"
-                : "bg-zinc-800"
+                ? "bg-black text-white"
+                : "bg-white border border-zinc-300"
             }`}
           >
             AND
           </button>
+
         </div>
 
         <input
@@ -291,13 +358,13 @@ export default function Home() {
             setActorSearch(e.target.value);
             setActorOpen(true);
           }}
-          className="w-full p-2 bg-zinc-900 rounded"
+          className="w-full p-3 rounded-xl bg-white border border-zinc-300 outline-none"
         />
 
         {actorOpen && (
-          <div className="bg-zinc-800 mt-1 rounded max-h-60 overflow-auto">
+          <div className="bg-white border border-zinc-300 mt-1 rounded-xl max-h-60 overflow-auto shadow-lg">
 
-            <div className="text-xs text-zinc-400 p-2">
+            <div className="text-xs text-zinc-400 p-3">
               TOP {selectedTitle === "all" ? 20 : 5}
             </div>
 
@@ -305,15 +372,15 @@ export default function Home() {
               <div
                 key={a}
                 onClick={() => addActor(a)}
-                className="p-2 hover:bg-zinc-700 cursor-pointer"
+                className="p-3 hover:bg-zinc-100 cursor-pointer"
               >
                 {a}
               </div>
             ))}
 
-            <div className="border-t border-zinc-700" />
+            <div className="border-t border-zinc-200" />
 
-            <div className="text-xs text-zinc-400 p-2">
+            <div className="text-xs text-zinc-400 p-3">
               전체 배우
             </div>
 
@@ -321,46 +388,63 @@ export default function Home() {
               <div
                 key={a}
                 onClick={() => addActor(a)}
-                className="p-2 hover:bg-zinc-700 cursor-pointer"
+                className="p-3 hover:bg-zinc-100 cursor-pointer"
               >
                 {a}
               </div>
             ))}
+
           </div>
         )}
 
         {/* 태그 */}
-        <div className="flex flex-wrap gap-2 mt-3">
+        <div className="flex flex-wrap gap-2 mt-4">
+
           {selectedActors.map((a) => (
             <span
               key={a}
               onClick={() => removeActor(a)}
-              className="bg-white text-black px-2 py-1 rounded text-xs cursor-pointer"
+              className="bg-black text-white px-3 py-1 rounded-full text-xs cursor-pointer"
             >
               {a} ✕
             </span>
           ))}
+
         </div>
+
       </div>
 
       {/* 🎫 카드 */}
-      <div className="space-y-2">
+      <div className="space-y-3">
+
         {filteredRecords.map((r) => (
-          <div key={r.id} className="bg-zinc-900 p-4 rounded-xl">
-            <div>
-              {r.title} {r.dateKey} {r.time}
+          <div
+            key={r.id}
+            className="bg-white rounded-2xl p-4 shadow-sm border border-zinc-200"
+          >
+
+            <div className="font-semibold mb-1">
+              {r.title}
             </div>
 
-            <div className="text-xs text-zinc-400">
+            <div className="text-sm text-zinc-500 mb-2">
+              {r.dateKey} · {r.time}
+            </div>
+
+            <div className="text-sm text-zinc-500 mb-2">
               {r.theater} · {r.seat}
             </div>
 
-            <div className="text-xs text-zinc-300">
+            <div className="text-sm text-zinc-700">
               {r.cast.join(", ")}
             </div>
+
           </div>
         ))}
+
       </div>
+
+      <BottomNav />
 
     </main>
   );
