@@ -26,7 +26,7 @@ export default function Home() {
     if (saved) setRecords(JSON.parse(saved));
   }, []);
 
-  const saveToLocal = (data) => {
+  const saveToLocal = (data: any) => {
     localStorage.setItem("records", JSON.stringify(data));
     setRecords(data);
   };
