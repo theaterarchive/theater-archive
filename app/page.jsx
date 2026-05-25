@@ -26,13 +26,13 @@ export default function Home() {
     if (saved) setRecords(JSON.parse(saved));
   }, []);
 
-  const saveToLocal = (data: any) => {
+  const saveToLocal = (data) => {
     localStorage.setItem("records", JSON.stringify(data));
     setRecords(data);
   };
 
   // 📂 CSV 업로드
-  const handleFileUpload = (e: any) => {
+  const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
